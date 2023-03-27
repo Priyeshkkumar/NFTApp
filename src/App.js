@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import contract from "./contractABI.json";
 import Container from "@mui/material/Container";
-import Button from "@mui/material/Button";
+import LoadingButton from "@mui/lab/LoadingButton";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
@@ -15,6 +15,8 @@ const App = () => {
   const [name, setName] = useState("");
   const [imagePath, setImagePath] = useState("");
   const [description, setDescription] = useState("");
+  const [isWalletConnecting, setIsWalletConnecting] = useState(false);
+  const [isMinting, setIsMinting] = useState(false);
 
   const headers = {
     "Content-Type": "multipart/form-data",
@@ -45,11 +47,14 @@ const App = () => {
   };
 
   const mintNftHandler = async () => {
+    setIsMinting(true);
     const data = {
       name: name,
       image: imagePath,
       description: description,
     };
+
+    console.log("Form Data", data);
 
     const formData = new FormData();
     formData.append("meta", JSON.stringify(data));
@@ -92,9 +97,11 @@ const App = () => {
       .catch((err) => {
         console.log(err);
       });
+    setIsMinting(false);
   };
 
   const connectWalletHandler = async () => {
+    setIsWalletConnecting(true);
     const { ethereum } = window;
     if (!ethereum) {
       alert("Wallet not found");
@@ -109,6 +116,7 @@ const App = () => {
         console.log(err);
       }
     }
+    setIsWalletConnecting(false);
   };
 
   useEffect(() => {
@@ -125,9 +133,15 @@ const App = () => {
       }}
       maxWidth="sm"
     >
-      <Button onClick={connectWalletHandler} variant="contained">
-        Connect Wallet
-      </Button>
+      {web3Account === null && (
+        <LoadingButton
+          loading={isWalletConnecting}
+          onClick={connectWalletHandler}
+          variant="contained"
+        >
+          Connect Wallet
+        </LoadingButton>
+      )}
       {web3Account !== null && (
         <>
           <Box component="span" sx={{ p: 2, border: "1px dashed grey" }}>
@@ -182,13 +196,14 @@ const App = () => {
                   }}
                 />
               </Stack>
-              <Button
+              <LoadingButton
+                loading={isMinting}
                 onClick={mintNftHandler}
                 sx={{ width: "100%", marginTop: "20px" }}
                 variant="contained"
               >
                 Mint NFT
-              </Button>
+              </LoadingButton>
             </Container>
           </Box>
         </>
